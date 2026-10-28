@@ -1,0 +1,155 @@
+{
+  "realm": "pulseboard",
+  "displayName": "PulseBoard",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "bruteForceProtected": true,
+  "failureFactor": 5,
+  "permanentLockout": false,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "passwordPolicy": "length(8) and upperCase(1) and lowerCase(1) and digits(1) and notUsername",
+  "roles": {
+    "realm": [
+      { "name": "admin", "description": "Full access: dashboards, alerts management, users" },
+      { "name": "viewer", "description": "Read-only access to dashboards and alerts" },
+      { "name": "ingestor", "description": "Machine role: allowed to push metrics" },
+      { "name": "offline_access", "description": "${role_offline-access}" },
+      { "name": "uma_authorization", "description": "${role_uma_authorization}" },
+      {
+        "name": "default-roles-pulseboard",
+        "description": "${role_default-roles}",
+        "composite": true,
+        "composites": { "realm": ["viewer", "offline_access", "uma_authorization"] }
+      }
+    ]
+  },
+  "defaultRole": { "name": "default-roles-pulseboard" },
+  "clients": [
+    {
+      "clientId": "pulseboard-api",
+      "name": "PulseBoard API",
+      "description": "Resource server. Exists only to be the audience of access tokens.",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "pulseboard-frontend",
+      "name": "PulseBoard Web",
+      "description": "React SPA - Authorization Code + PKCE",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "baseUrl": "/",
+      "redirectUris": ["http://localhost:5173/*"],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "pulseboard-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "pulseboard-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "pulseboard-cli",
+      "name": "PulseBoard CLI (dev only)",
+      "description": "DEV/TEST ONLY: password grant to get tokens from curl and e2e tests. Do not enable in production.",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "protocolMappers": [
+        {
+          "name": "pulseboard-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "pulseboard-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "pulseboard-ingestor",
+      "name": "PulseBoard Ingestor",
+      "description": "Machine-to-machine client (client_credentials) used by data sources to push metrics",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "pulseboard-ingestor-dev-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "pulseboard-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "pulseboard-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@pulseboard.dev",
+      "email": "admin@pulseboard.dev",
+      "emailVerified": true,
+      "firstName": "Ada",
+      "lastName": "Admin",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "Admin123!", "temporary": false }],
+      "realmRoles": ["default-roles-pulseboard", "admin"]
+    },
+    {
+      "username": "viewer@pulseboard.dev",
+      "email": "viewer@pulseboard.dev",
+      "emailVerified": true,
+      "firstName": "Victor",
+      "lastName": "Viewer",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "Viewer123!", "temporary": false }],
+      "realmRoles": ["default-roles-pulseboard"]
+    },
+    {
+      "username": "service-account-pulseboard-ingestor",
+      "enabled": true,
+      "serviceAccountClientId": "pulseboard-ingestor",
+      "realmRoles": ["ingestor"]
+    }
+  ]
+}

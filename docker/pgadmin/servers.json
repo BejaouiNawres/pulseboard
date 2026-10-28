@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "PulseBoard (local)",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "pulseboard",
+      "Username": "postgres",
+      "SSLMode": "prefer"
+    }
+  }
+}
